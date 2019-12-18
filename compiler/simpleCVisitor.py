@@ -56,7 +56,7 @@ class simpleCVisitor(ParseTreeVisitor):
         params = self.visit(ctx.getChild(3)) # func params
         for i, param in enumerate(params):
             if i > 0:
-                res += ","
+                res += ", "
             res += param
         res += "):"
         print(res)
@@ -81,7 +81,6 @@ class simpleCVisitor(ParseTreeVisitor):
         return IDname
         
 
-
     # Visit a parse tree produced by simpleCParser#funcBody.
     def visitFuncBody(self, ctx:simpleCParser.FuncBodyContext):
         self.enter_scope()
@@ -94,7 +93,10 @@ class simpleCVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by simpleCParser#body.
     def visitBody(self, ctx:simpleCParser.BodyContext):
-        return 
+        total = ctx.getChildCount()
+        for index in range(total):
+            self.visit(ctx.getChild(index))
+        return
 
 
     # Visit a parse tree produced by simpleCParser#block.
@@ -109,7 +111,20 @@ class simpleCVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by simpleCParser#arrayInitBlock.
     def visitArrayInitBlock(self, ctx:simpleCParser.ArrayInitBlockContext):
-        return self.visitChildren(ctx)
+        type_ = ctx.getChild(0).getText()
+        IDname = ctx.getChild(1).getText()
+        Len = int(ctx.getChild(3).getText())
+        res = "    " * self.scope
+        res += IDname + " = ["
+        if type_ == "int" or type_ == "char":
+            res += " 0"
+        elif type_ == "string":
+            res += " \"\""
+        elif type_ == "double":
+            res += " 0.0"
+        res += " for i in range(%d)]" % Len 
+        print(res)
+        return 
 
 
     # Visit a parse tree produced by simpleCParser#structInitBlock.
@@ -170,9 +185,7 @@ class simpleCVisitor(ParseTreeVisitor):
     # Visit a parse tree produced by simpleCParser#returnBlock.
     def visitReturnBlock(self, ctx:simpleCParser.ReturnBlockContext):
         #print('returnBlock')
-        res = ""
-        for i in range(self.scope):
-            res += "    "
+        res = "    " * self.scope
         res += "return "
         if ctx.getChildCount() == 2:
             print(res)
@@ -259,7 +272,6 @@ class simpleCVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by simpleCParser#mType.
     def visitMType(self, ctx:simpleCParser.MTypeContext):
-        print(ctx.getText())
         return self.visitChildren(ctx)
 
 
@@ -389,7 +401,5 @@ class simpleCVisitor(ParseTreeVisitor):
             print("Semantic Error：",var_name, " is redefined")
         else:    
             self.symbol_table[var_name].append(self.scope)
-
-
 
 del simpleCParser
