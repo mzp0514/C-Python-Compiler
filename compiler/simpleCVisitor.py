@@ -83,12 +83,11 @@ class simpleCVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by simpleCParser#funcBody.
     def visitFuncBody(self, ctx:simpleCParser.FuncBodyContext):
-        self.enter_scope()
+        ans = []
         total = ctx.getChildCount()
         for index in range(total):
-            self.visit(ctx.getChild(index))
-        self.leave_scope()
-        return
+            ans.append(self.visit(ctx.getChild(index)))
+        return '\n'.join(ans)
 
 
     # Visit a parse tree produced by simpleCParser#body.

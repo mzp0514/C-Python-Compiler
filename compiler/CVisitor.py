@@ -9,14 +9,26 @@ else:
 
 class CVisitor(ParseTreeVisitor):
 
+    def __init__(self):
+        super(CVisitor, self).__init__()
+        self.scope = 0
+
+
     # Visit a parse tree produced by CParser#compilationUnit.
     def visitCompilationUnit(self, ctx:CParser.CompilationUnitContext):
-        return self.visitChildren(ctx)
+        ans = []
+        total = ctx.getChildCount()
+        for index in range(total):
+            ans.append(self.visit(ctx.getChild(index)))
+        return '\n'.join(ans)
 
 
     # Visit a parse tree produced by CParser#functionDefinition.
     def visitFunctionDefinition(self, ctx:CParser.FunctionDefinitionContext):
-        return self.visitChildren(ctx)
+        ans = "def"
+        ans += " " + self.visit(ctx.declarator()) + ":\n"
+        ans += ' ' + self.visit(ctx.compoundStatement())
+        return ans
 
 
     # Visit a parse tree produced by CParser#typeSpecifier.

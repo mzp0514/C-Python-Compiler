@@ -40,7 +40,7 @@ typeSpecifier
 declarator
     :   Identifier      # pureIdentifier
     |   Identifier '[' assignmentExpression? ']'       # arrayIdentifier
-    |   Identifier '(' parameterTypeList? ')' /* function definition or function declaration */    # functionDefinitionOrDeclaration
+    |   Identifier '(' parameterTypeList? ')'    # functionDefinitionOrDeclaration
     ;
 
 statement
