@@ -1,300 +1,159 @@
 grammar simpleC;
 
-//整体解析
-prog : (IncludeDirective)* (initialBlock|arrayInitBlock|structInitBlock|structDeclaration|functionDefinition)*;
+prog :(include)* (initialBlock|arrayInitBlock|structInitBlock|mStructDef|mFunction)*;
+//prog : (forBlock)*;
 
+//-------------语法规则----------------------------------------------
+include : '#include' '<' mLIB '>';
 
+//结构体
+mStructDef : mStruct '{' (structParam)+ '}'';';
 
+//结构体中参数
+structParam : (mType|mStruct) (mID|mArray) (',' (mID|mArray))* ';';
 
-//代码块
-statement 
-    :   (block | functionCall)*
-    ;
+//函数
+mFunction : (mType|mVoid|mStruct) mID '(' params ')' '{' funcBody '}';
+
+//函数参数
+params : param (','param)* |;
+param : mType mID;
+
+//函数体
+funcBody : body returnBlock;
+
+//语句块/函数快
+body : (block | func';')*;
 
 //语句块
-block 
-    :   initialBlock 
-    |   arrayInitBlock 
-    |   structInitBlock 
-    |   assignBlock 
-    |   ifBlocks 
-    |   whileBlock 
-    |   forBlock 
-    |   returnBlock
-    ;
+block : initialBlock | arrayInitBlock | structInitBlock | assignBlock | ifBlocks | whileBlock | forBlock | returnBlock;
 
 //初始化语句
-initialBlock 
-    :   (typeSpecifier) Identifier ('=' expression)? (',' Identifier ('=' expression)?)* ';'
-    ;
-arrayInitBlock 
-    :   typeSpecifier Identifier '[' INT ']' ';'
-    ; 
-structInitBlock 
-    :   structOrUnionSpecifier (Identifier|arrayIdentifier) ';'
-    ;
+initialBlock : (mType) mID ('=' expr)? (',' mID ('=' expr)?)* ';';
+arrayInitBlock : mType mID '[' mINT ']'';'; 
+structInitBlock : mStruct (mID|mArray)';';
+
 
 //赋值语句
-assignBlock 
-    :   ((arrayItem|Identifier|structMember) '=')+  expression ';'
-    ;
+assignBlock : ((arrayItem|mID|structMember) '=')+  expr ';';
+
 
 //if 语句
-//ifBlocks 
-//  :   'if' '(' expression ')' '{' statement '}' ('else' '{' statement '}')?
-//  ;
-ifBlocks 
-    :   ifBlock (elifBlock)* (elseBlock)?
-    ;
-ifBlock 
-    :   'if' '('expression')' '{' statement '}'
-    ;
-elifBlock 
-    :   'else' 'if' '(' expression ')' '{' statement '}'
-    ;
-elseBlock 
-    :   'else' '{' statement '}'
-    ;
+ifBlocks : ifBlock (elifBlock)* (elseBlock)?;
+ifBlock : 'if' '('condition')' '{' body '}';
+elifBlock : 'else' 'if' '(' condition ')' '{' body '}';
+elseBlock : 'else' '{' body '}';
+
+condition :  expr;
 
 //while 语句
-whileBlock 
-    :   'while' '(' expression ')' '{' statement '}'
-    ;
+whileBlock : 'while' '(' condition ')' '{' body '}';
 
 //for 语句
-forBlock 
-    :   'for' '(' forDeclaration  ';' expression ';' forExpression ')' ('{' statement '}'|';')
-    ;
-forDeclaration 
-    :   Identifier '=' expression (',' forDeclaration)?
-    |
-    ;
-forExpression 
-    :   Identifier '=' expression (',' forExpression)?
-    |
-    ;
+forBlock : 'for' '(' for1Block  ';' condition ';' for3Block ')' ('{' body '}'|';');
+for1Block :  mID '=' expr (',' for1Block)?|;
+for3Block : mID '=' expr (',' for3Block)?|;
 
 //return 语句
-returnBlock 
-    :   'return' (INT|Identifier)? ';'
-    ;
+returnBlock : 'return' (mINT|mID)? ';';
 
-
-
-
-//运算符
-BinaryLogicOperator 
-    :   '&&' | '||'
-    ;
-
-Operator 
-    :   '!' | '+' | '-' | '*' | '/' | '==' | '!=' | '<' | '<=' | '>' | '>='
-    ;
-
-//表达式
-expression
-    : '(' expression ')'               #parens
-    | op='!' expression                   #Neg
-    | expression op=('*' | '/' | '%') expression   #MulDiv 
-    | expression op=('+' | '-') expression   #AddSub
-    | expression op=('==' | '!=' | '<' | '<=' | '>' | '>=') expression #Judge
-    | expression '&&' expression             # AND
-    | expression '||' expression             # OR
+expr
+    : '(' expr ')'               #parens
+    | op='!' expr                   #Neg
+    | expr op=('*' | '/' | '%') expr   #MulDiv 
+    | expr op=('+' | '-') expr   #AddSub
+    | expr op=('==' | '!=' | '<' | '<=' | '>' | '>=') expr #Judge
+    | expr '&&' expr             # AND
+    | expr '||' expr             # OR
     | arrayItem                  #arrayitem
     | structMember               #structmember
-    | (op='-')? INT             #int                          
-    | (op='-')? DOUBLE          #double
-    | CHAR                       #char
-    | StringLiteral                    #string             
-    | Identifier                         #identifier   
-    | functionCall                       #function                                     
+    | (op='-')? mINT             #int                          
+    | (op='-')? mDOUBLE          #double
+    | mCHAR                       #char
+    | mSTRING                     #string             
+    | mID                         #identifier   
+    | func                       #function                                     
     ;
 
+mType : 'int'| 'double'| 'char'| 'string';
 
+mArray : mID '[' mINT ']'; 
+
+mVoid : 'void';
+
+mStruct : 'struct' mID;
+
+structMember: (mID | arrayItem)'.'(mID | arrayItem);
+
+arrayItem : mID '[' expr ']';
 
 
 //函数
-//函数定义
-functionDefinition 
-    :   (typeSpecifier|structOrUnionSpecifier) Identifier '(' functionParam ')' '{' functionBody '}'
-    ;
-
-//函数参数
-functionParams 
-    :   functionParam (','functionParam)* |
-    ;
-functionParam 
-    :   typeSpecifier Identifier
-    ;
-
-//函数体
-functionBody 
-    :   statement returnBlock
-    ;
-
-//函数调用
-functionCall 
-    :   (strlenFunction | atoiFunction | printfFunction | scanfFunction | getsFunction | customizedFunction) ';'
-    ;
+func : (strlenFunc | atoiFunc | printfFunc | scanfFunc | getsFunc | selfDefinedFunc);
 
 //strlen
-strlenFunction 
-    :   'strlen' '(' Identifier ')'
-    ;
+strlenFunc : 'strlen' '(' mID ')';
+
 //atoi
-atoiFunction 
-    :   'atoi' '(' Identifier ')' 
-    ;
+atoiFunc : 'atoi' '(' mID ')' ;
+
 //printf
-printfFunction 
-    :   'printf' '(' (StringLiteral | Identifier) (',' expression)* ')'
-    ;
+printfFunc 
+    : 'printf' '(' (mSTRING | mID) (','expr)* ')';
+
 //scanf
-scanfFunction 
-    :   'scanf' '(' StringLiteral (',' ('&')? (Identifier|arrayItem|structMember))* ')'
-    ;
+scanfFunc : 'scanf' '(' mSTRING (','('&')?(mID|arrayItem|structMember))* ')';
+
 //gets
-getsFunction 
-    :   'gets' '(' Identifier ')'
-    ;
+getsFunc : 'gets' '(' mID ')';
 
 //Selfdefined
-customizedFunction 
-    :   Identifier '('((constant|Identifier)(','(constant|Identifier))*)? ')'
-    ;
+selfDefinedFunc : mID '('((argument|mID)(','(argument|mID))*)? ')';
+
+argument : mINT | mDOUBLE | mCHAR | mSTRING;
+
+//mID
+mID : ID;
+
+//mINT
+mINT : INT;
+
+//mDOUBLE
+mDOUBLE : DOUBLE;
+
+//mCHAR
+mCHAR : CHAR;
+
+//mSTRING
+mSTRING : STRING;
+
+//mLIB
+mLIB : LIB;
+
+//-------------词法规则----------------------------------------------
+
+ID : [a-zA-Z_][0-9A-Za-z_]*;
+
+INT : [0-9]+;
+
+DOUBLE : [0-9]+'.'[0-9]+;
+
+CHAR : '\''.'\'';
+
+STRING : '"'.*?'"';
 
 
+LIB : [a-zA-Z]+'.h'?;
 
+Conjunction : '&&' | '||';
 
-//常量
-//常量定义
-constant 
-    :   INT 
-    |   DOUBLE 
-    |   CHAR 
-    |   StringLiteral
-    ;
+Operator : '!' | '+' | '-' | '*' | '/' | '==' | '!=' | '<' | '<=' | '>' | '>=';
 
-//整数常量
-INT 
-    :   [0-9]+
-    ;
+//UnaryOperator :  '&' | '*' | '+' | '-' | '~' | '!';
 
-//实数常量
-DOUBLE 
-    :   [0-9]+ '.' [0-9]+
-    ;
+LineComment: '//'.*?'\r'?'\n'   -> skip;
 
-//字符常量
-CHAR 
-    : '\'' . '\''
-    ;
+BlockComment:  '/*'.*?'*/'  -> skip;
 
-//字符串常量
-StringLiteral 
-    :   EncodingPrefix? '"' SCharSequence '"'
-    ;
-fragment
-EncodingPrefix
-    :   'u8'
-    |   'u'
-    |   'U'
-    |   'L'
-    ;
-fragment
-SCharSequence
-    :   .*?
-    ;    
+WS : [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines
 
-
-
-
-//变量
-//类型标识符
-typeSpecifier 
-    :   ('void'
-    |   'char'
-    |   'short'
-    |   'int'
-    |   'long'
-    |   'float'
-    |   'double'
-    |   'signed'
-    |   'unsigned'
-    |   'string')
-    ;
-
-//名称标识符
-Identifier 
-    :   [a-zA-Z_][0-9A-Za-z_]*
-    ;
-
-//结构体
-//结构体定义
-structDeclaration 
-    :   structOrUnionSpecifier '{' (structParam)+ '}'';'
-    ;
-
-//结构体说明符
-structOrUnionSpecifier
-    :   structOrUnion Identifier
-    ;
-
-//结构体类型标识符
-structOrUnion
-    :   'struct'
-    |   'union'
-    ;    
-
-//结构体中参数
-structParam 
-    :   (typeSpecifier|structOrUnionSpecifier) (Identifier|arrayIdentifier) (',' (Identifier|arrayIdentifier))* ';'
-    ;
-
-//结构体成员调用
-structMember
-    :   (Identifier | arrayItem) '.' (Identifier | arrayItem)
-    ;
-
-//数组
-//数组标识符
-arrayIdentifier 
-    :   Identifier '[' INT ']'
-    ; 
-
-//数组成员调用
-arrayItem 
-    :   Identifier '[' expression ']'
-    ;
-
-
-
-
-//忽略
-//include语句、注释、空格与换行
-IncludeDirective
-    :   '#' Whitespace? 'include' Whitespace? (('"' ~[\r\n]* '"') | ('<' ~[\r\n]* '>' ))  Whitespace? Newline
-        -> skip
-    ;
-
-LineComment
-    :   '//' ~[\r\n]*
-        -> skip
-    ;
-
-BlockComment
-    :   '/*' .*? '*/'  
-        -> skip
-    ;
-
-Whitespace
-    :   [ \t]+
-        -> skip
-    ;
-
-Newline
-    :   (   '\r' '\n'?
-        |   '\n'
-        )
-        -> skip
-    ;
