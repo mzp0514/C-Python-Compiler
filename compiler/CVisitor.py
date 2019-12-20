@@ -85,6 +85,7 @@ class CVisitor(ParseTreeVisitor):
     def visitCompoundStatement(self, ctx:CParser.CompoundStatementContext):
         self.scope += 1
         ans = [ self.visit(e) for e in ctx.children[1 : -1]]
+        print(ans)
         ans = ('    ' * self.scope) + ('\n' + '    ' * self.scope).join(ans)
         self.scope -= 1
         return ans
@@ -92,7 +93,7 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#expressionStatement.
     def visitExpressionStatement(self, ctx:CParser.ExpressionStatementContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.expression())
 
 
     # Visit a parse tree produced by CParser#selectionStatement.
@@ -187,17 +188,44 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#primaryExpression.
     def visitPrimaryExpression(self, ctx:CParser.PrimaryExpressionContext):
-        return self.visitChildren(ctx)
+        print(ctx.getText())
+        return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#postfixExpression.
     def visitPostfixExpression(self, ctx:CParser.PostfixExpressionContext):
-        return self.visitChildren(ctx)
+        if ctx.primaryExpression():
+            return self.visit(ctx.primaryExpression())
+        if ctx.children[1].getText() == '[':
+            return self.visit(ctx.postfixExpression()) + '[' + self.visit(ctx.expression()) + ']'
+        elif ctx.children[1].getText() == '(':
+            func = ctx.postfixExpression().getText()
+            if ctx.expression():
+                args = self.visit(ctx.expression())
+                if func == 'strlen':
+                    return args + ".length()"
+                return func + "(" + args + ")"
+            else:
+                return func + "()"
+        elif ctx.children[1].getText() == '.':
+            pass
+            # struct
+        elif ctx.children[1].getText() == '++':
+            pass 
+        elif ctx.children[1].getText() == '--':
+            pass
 
 
     # Visit a parse tree produced by CParser#unaryExpression.
     def visitUnaryExpression(self, ctx:CParser.UnaryExpressionContext):
-        return self.visitChildren(ctx)
+        if len(ctx.children) > 1:
+            res = self.visit(ctx.postfixExpression())
+            if ctx.children[0].getText() == "++":
+                return res + " += 1"
+            elif ctx.children[0].getText() == "--":
+                return res + " -= 1"
+        else:
+            return self.visit(ctx.postfixExpression())
 
 
     # Visit a parse tree produced by CParser#castExpression.
@@ -222,32 +250,46 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#equalityExpression.
     def visitEqualityExpression(self, ctx:CParser.EqualityExpressionContext):
-        return self.visitChildren(ctx)
+        print("equ", ctx.getText())
+        return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#logicalAndExpression.
     def visitLogicalAndExpression(self, ctx:CParser.LogicalAndExpressionContext):
-        return self.visitChildren(ctx)
+        if ctx.logicalAndExpression():
+            return self.visit(ctx.logicalAndExpression()) + ' and ' + self.visit(ctx.equalityExpression())
+        else:
+            return self.visit(ctx.equalityExpression())
 
 
     # Visit a parse tree produced by CParser#logicalOrExpression.
     def visitLogicalOrExpression(self, ctx:CParser.LogicalOrExpressionContext):
-        return self.visitChildren(ctx)
+        if ctx.logicalAndExpression:
+            return self.visit(ctx.logicalAndExpression())
+        else:
+            return self.visit(ctx.logicalOrExpression()) + ' or ' + self.visit(ctx.equalityExpression())
 
 
     # Visit a parse tree produced by CParser#conditionalExpression.
     def visitConditionalExpression(self, ctx:CParser.ConditionalExpressionContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.logicalOrExpression())
 
 
     # Visit a parse tree produced by CParser#assignmentExpression.
     def visitAssignmentExpression(self, ctx:CParser.AssignmentExpressionContext):
-        return ctx.getText()
+        if ctx.conditionalExpression():
+            ans = self.visit(ctx.conditionalExpression())
+        else:
+            ans = self.visit(ctx.unaryExpression()) + ' = ' + self.visit(ctx.assignmentExpression())
+        print("ass," , ans)
+        return ans
 
 
     # Visit a parse tree produced by CParser#expression.
     def visitExpression(self, ctx:CParser.ExpressionContext):
-        return ctx.getText()
+        ans = ', '.join([self.visit(x) for x in ctx.assignmentExpression()])
+        print("visitexpression", ans)
+        return ', '.join([self.visit(x) for x in ctx.assignmentExpression()])
 
 
     # Visit a parse tree produced by CParser#parameterTypeList.
