@@ -21,3 +21,9 @@ int func(int a, int b){
     }
     return strlen(b)*2;
 }
+
+int main(){
+    int a = 0, b = 1;
+    printf("%d", func(a, b*a));
+    return 0;
+}
