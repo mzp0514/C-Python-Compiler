@@ -29,13 +29,13 @@ class CVisitor(ParseTreeVisitor):
     def visitFunctionDefinition(self, ctx:CParser.FunctionDefinitionContext):
         ans = "def"
         ans += ' ' + self.visit(ctx.declarator()) + ":\n"
-        ans += ' ' + self.visit(ctx.compoundStatement())
+        ans += self.visit(ctx.compoundStatement())
         return ans
 
 
     # Visit a parse tree produced by CParser#typeSpecifier.
     def visitTypeSpecifier(self, ctx:CParser.TypeSpecifierContext):
-        return self.visitChildren(ctx)
+        return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#structSpecifier.
@@ -55,12 +55,15 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#variableidentifier.
     def visitVariableidentifier(self, ctx:CParser.VariableidentifierContext):
-        return ctx.Identifier().getText()
+        return { "name": ctx.Identifier().getText() }
 
 
     # Visit a parse tree produced by CParser#arrayidentifier.
     def visitArrayidentifier(self, ctx:CParser.ArrayidentifierContext):
-        return self.visitChildren(ctx)
+        name = ctx.Identifier().getText()
+        if ctx.assignmentExpression():
+            length = self.visit(ctx.assignmentExpression())
+        return { "name": name, "length": length}
 
 
     # Visit a parse tree produced by CParser#functionidentifier.
@@ -70,7 +73,7 @@ class CVisitor(ParseTreeVisitor):
         if ctx.parameterTypeList():
             ans += self.visit(ctx.parameterTypeList())
         ans += ")"
-        return ans
+        return ans 
 
 
     # Visit a parse tree produced by CParser#statement.
@@ -141,17 +144,45 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#declaration.
     def visitDeclaration(self, ctx:CParser.DeclarationContext):
-        return self.visitChildren(ctx)
+        type_ = self.visit(ctx.typeSpecifier())
+        decls = self.visit(ctx.initDeclaratorList())
+        ans = []
+        for decl in decls: 
+            if 'length' in decl.keys():
+                if type_ == "int":
+                    ans.append([decl["name"], "[0] * " + decl["length"]])
+                elif type_ == "char":
+                    ans.append([decl["name"], "\'\0\' * " + decl["length"]])
+                else:
+                    ans.append([decl["name"], "[None] * " + decl["length"]])
+            elif 'value' in decl.keys():
+                ans.append([decl["name"], decl["value"]])
+            else:
+                if type_ == "int":
+                    ans.append([decl["name"], "0"])
+                elif type_ == "char":
+                    ans.append([decl["name"], "\'\0\'"])
+                else:
+                    ans.append([decl["name"], "None"])
+        names, vals = [e[0] for e in ans], [e[1] for e in ans]
+        
+
+        return ', '.join(names) + " = " + ', '.join(vals)
 
 
     # Visit a parse tree produced by CParser#initDeclaratorList.
     def visitInitDeclaratorList(self, ctx:CParser.InitDeclaratorListContext):
-        return self.visitChildren(ctx)
+        return [self.visit(i) for i in ctx.initDeclarator()]
 
 
     # Visit a parse tree produced by CParser#initDeclarator.
     def visitInitDeclarator(self, ctx:CParser.InitDeclaratorContext):
-        return self.visitChildren(ctx)
+        if ctx.initializer():
+            return {
+                "name": self.visit(ctx.declarator())["name"],
+                "value": self.visit(ctx.initializer())
+            }
+        return self.visit(ctx.declarator())
 
 
     # Visit a parse tree produced by CParser#primaryExpression.
@@ -211,7 +242,7 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#assignmentExpression.
     def visitAssignmentExpression(self, ctx:CParser.AssignmentExpressionContext):
-        return self.visitChildren(ctx)
+        return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#expression.
@@ -231,12 +262,12 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#parameterDeclaration.
     def visitParameterDeclaration(self, ctx:CParser.ParameterDeclarationContext):
-        return self.visit(ctx.declarator())
+        return self.visit(ctx.declarator())["name"]
 
 
     # Visit a parse tree produced by CParser#initializer.
     def visitInitializer(self, ctx:CParser.InitializerContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.assignmentExpression())
 
 
     # Visit a parse tree produced by CParser#initializerList.
