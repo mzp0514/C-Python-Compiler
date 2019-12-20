@@ -98,11 +98,46 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#selectionStatement.
     def visitSelectionStatement(self, ctx:CParser.SelectionStatementContext):
-        return self.visitChildren(ctx)
-
+        # 纯if语句
+        if len(ctx.children) <= 5:
+            ifExpression = self.visit(ctx.expression())
+            statement = self.visit(ctx.children[4])
+            ans = "if " + ifExpression + ":\n"
+            if statement.strip() == "":
+                ans += (self.scope + 1) * "    " + "pass"
+            else:
+                ans += statement
+        # if-elif-else语句
+        else:
+            # 先解析最开始的if
+            ifExpression = self.visit(ctx.expression())
+            statement = self.visit(ctx.children[4])
+            ans = "if " + ifExpression + ":\n"
+            if statement.strip() == "":
+                ans += (self.scope + 1) * "    " + "pass"
+            else:
+                ans += statement
+            nextStatement = ctx.children[6].children[0]
+            while len(nextStatement.children) > 3:
+                ifExpression = self.visit(nextStatement.expression())
+                statement = self.visit(nextStatement.children[4])
+                ans += "\n" + self.scope * "    " + "elif " + ifExpression + ":\n"
+                if statement.strip() == "":
+                    ans += (self.scope + 1) * "    " + "pass"
+                else:
+                    ans += statement
+                nextStatement = nextStatement.children[6].children[0]
+            statement = self.visit(nextStatement)
+            ans += "\n" + self.scope * "    " + "else:\n"
+            if statement.strip() == "":
+                ans += (self.scope + 1) * "    " + "pass"
+            else:
+                ans += statement
+        return ans
 
     # Visit a parse tree produced by CParser#whileiteration.
     def visitWhileiteration(self, ctx:CParser.WhileiterationContext):
+        
         whileExpression = self.visit(ctx.expression())
         statement = self.visit(ctx.statement())
         ans = "while " + whileExpression + ":\n"
