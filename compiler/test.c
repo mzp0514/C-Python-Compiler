@@ -1,9 +1,23 @@
 int func(int a, int b){
-    int a[1000], b = 2, c, d = 999;
-    char s[1000];
-    a[0] = 1 + 2 -0;
-    int q = 99*99;
-    int a = (1 > 3);
-    a[0] = a[1] + a[2] * a[1000];
-    return 0;
+    int len = strlen(a);
+    for(int i = 0; i < strlen(a); ++i){
+        a = 1;
+        printf("a");
+        printf("%d", strlen(a));
+    }
+
+    for(int i = 100; i > 0; i--){
+        int a[10000], b = 1, c;
+        a[0] = a[1];
+        a[0] = a[2] * a[3];
+        a[7] = a[2] / a[2] + a[0];
+        for(int i = 100; i > 0; i = i + 2){
+        
+        }
+    }
+
+    for(int i = 100; i > 0; i = i + 2){
+        
+    }
+    return strlen(b)*2;
 }
