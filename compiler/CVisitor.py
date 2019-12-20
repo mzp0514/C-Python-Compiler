@@ -63,7 +63,8 @@ class CVisitor(ParseTreeVisitor):
         name = ctx.Identifier().getText()
         if ctx.assignmentExpression():
             length = self.visit(ctx.assignmentExpression())
-        return { "name": name, "length": length}
+            return { "name": name, "length": length}
+        return {"name": name}
 
 
     # Visit a parse tree produced by CParser#functionidentifier.
@@ -226,6 +227,8 @@ class CVisitor(ParseTreeVisitor):
                     return args + ".length()"
                 elif func == "printf":
                     return "print(" + args + ")"
+                elif func == "gets":
+                    return args + " = input()"
                 return func + "(" + args + ")"
             else:
                 return func + "()"
@@ -338,12 +341,15 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#initializer.
     def visitInitializer(self, ctx:CParser.InitializerContext):
-        return self.visit(ctx.assignmentExpression())
+        if ctx.assignmentExpression():
+            return self.visit(ctx.assignmentExpression())
+        else:
+            return "[" + self.visit(ctx.initializerList()) + "]"
 
 
     # Visit a parse tree produced by CParser#initializerList.
     def visitInitializerList(self, ctx:CParser.InitializerListContext):
-        return self.visitChildren(ctx)
+        return ", ".join([ self.visit(e) for e in ctx.initializer()])
 
 
 
