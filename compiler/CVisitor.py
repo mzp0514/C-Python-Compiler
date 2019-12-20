@@ -103,7 +103,14 @@ class CVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by CParser#whileiteration.
     def visitWhileiteration(self, ctx:CParser.WhileiterationContext):
-        return self.visitChildren(ctx)
+        whileExpression = self.visit(ctx.expression())
+        statement = self.visit(ctx.statement())
+        ans = "while " + whileExpression + ":\n"
+        if statement.strip() == "":
+            ans += (self.scope + 1) * "    " + "pass"
+        else:
+            ans += statement
+        return ans
 
 
     # Visit a parse tree produced by CParser#foriteration.
@@ -278,14 +285,14 @@ class CVisitor(ParseTreeVisitor):
     def visitRelationalExpression(self, ctx:CParser.RelationalExpressionContext):
         if ctx.relationalExpression() is None:
             return self.visit(ctx.additiveExpression())
-        return self.visit(ctx.relationalExpression()) + ctx.children[1].getText() + self.visit(ctx.additiveExpression())
+        return self.visit(ctx.relationalExpression()) + ' ' + ctx.children[1].getText() + ' ' + self.visit(ctx.additiveExpression())
 
 
     # Visit a parse tree produced by CParser#equalityExpression.
     def visitEqualityExpression(self, ctx:CParser.EqualityExpressionContext):
         if ctx.equalityExpression() is None:
             return self.visit(ctx.relationalExpression())
-        return self.visit(ctx.equalityExpression()) + ctx.children[1].getText() + self.visit(ctx.relationalExpression())
+        return self.visit(ctx.equalityExpression()) + ' ' + ctx.children[1].getText() + ' ' + self.visit(ctx.relationalExpression())
 
 
     # Visit a parse tree produced by CParser#logicalAndExpression.
