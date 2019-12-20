@@ -29,40 +29,89 @@
 /** C 2011 grammar built from the C11 Spec */
 grammar C;
 
-compilationUnit :   (functionDefinition  |   declaration)* EOF;
+compilationUnit 
+    :   (functionDefinition | declaration)* EOF
+    ;
 
-functionDefinition:   typeSpecifier declarator compoundStatement ;
+functionDefinition
+    :   typeSpecifier declarator compoundStatement 
+    ;
 
 typeSpecifier
-    :  CONST? ('int' | 'void' | 'char') POINTER?
+    :   CONST? ('int' | 'void' | 'char') POINTER?
+    |   structSpecifier
+    ;
+
+CONST 
+    :   'const'
+    ;
+
+POINTER 
+    :   '*'
+    ;
+
+structSpecifier
+    :   STRUCT Identifier? '{' (structDeclaration)* '}'
+    |   STRUCT Identifier
+    ;
+
+STRUCT 
+    :   'struct'
+    ;
+
+structDeclaration
+    :   (typeSpecifier)* structDeclarator (',' structDeclarator)* ';'
+    ;
+
+structDeclarator
+    :   (declarator | declarator? ':' conditionalExpression)
     ;
 
 declarator
-    :   Identifier      # pureIdentifier
-    |   Identifier '[' assignmentExpression? ']'       # arrayIdentifier
-    |   Identifier '(' parameterTypeList? ')'    # functionDefinitionOrDeclaration
+    :   Identifier      # variableidentifier
+    |   Identifier '[' assignmentExpression? ']'       # arrayidentifier
+    |   Identifier '(' parameterTypeList? ')'    # functionidentifier
     ;
 
 statement
     :   compoundStatement
-    |   expression ';'
-    |   'if' '(' expression ')' statement ('else' statement)?
-    |   'while' '(' expression ')' statement
-    |   'for' '(' forDeclaration? ';' forExpression? ';' forExpression? ')' statement
-    |   'continue' ';'
-    |   'break' ';'
-    |   'return' expression? ';'
+    |   expressionStatement
+    |   selectionStatement
+    |   iterationStatement
+    |   jumpStatement
     ;
-
-forDeclaration :   typeSpecifier initDeclaratorList;
-
-/* forExpression is the same as expression, but just for simplicity we rename it forExpression.
-(so that every statement has at most 1 expression) */
-forExpression :   assignmentExpression (',' assignmentExpression)*;
 
 compoundStatement
     :   '{' blockItem* '}'
     ;
+
+expressionStatement
+    :   expression ';'
+    ;
+
+selectionStatement
+    :   'if' '(' expression ')' statement ('else' statement)?
+    ;
+
+iterationStatement
+    :   'while' '(' expression ')' statement    # whileiteration
+    |   'for' '(' forDeclaration? ';' forExpression? ';' forExpression? ')' statement   # foriteration
+    ;
+
+jumpStatement
+    :   'continue' ';'      # continuejump
+    |   'break' ';'     # breakjump
+    |   'return' expression? ';'    #returnjump
+    ;
+
+forDeclaration 
+    :   typeSpecifier initDeclaratorList
+    ;
+
+forExpression 
+    :   assignmentExpression (',' assignmentExpression)*
+    ;
+
 
 blockItem
     :   statement
@@ -92,13 +141,9 @@ postfixExpression
     :   primaryExpression
     |   postfixExpression '[' expression ']'
     |   postfixExpression '(' expression? ')'
-    ;
-
-castExpression
-    :   unaryExpression
-    |   DigitSequence // for
-    |   castExpression ('*' | '/') castExpression
-    |   castExpression ('-' | '+') castExpression
+    |   postfixExpression '.' Identifier
+    |   postfixExpression '++'
+    |   postfixExpression '--'
     ;
 
 unaryExpression
@@ -107,9 +152,27 @@ unaryExpression
     |   '--' postfixExpression
     ;
 
-relationalExpression
+castExpression
+    :   unaryExpression
+    |   DigitSequence // for
+    ;
+
+multiplicativeExpression
     :   castExpression
-    |   castExpression ('<' | '<=' | '>' | '>=') castExpression
+    |   multiplicativeExpression '*' castExpression
+    |   multiplicativeExpression '/' castExpression
+    |   multiplicativeExpression '%' castExpression
+    ;
+
+additiveExpression
+    :   multiplicativeExpression
+    |   additiveExpression '+' multiplicativeExpression
+    |   additiveExpression '-' multiplicativeExpression
+    ;    
+
+relationalExpression
+    :   additiveExpression
+    |   relationalExpression ('<' | '<=' | '>' | '>=') additiveExpression
     ;
 
 equalityExpression
@@ -124,23 +187,34 @@ logicalAndExpression
     ;
 
 logicalOrExpression
-    :   equalityExpression
+    :   logicalAndExpression
     |   logicalOrExpression '||' equalityExpression
     ;
 
+conditionalExpression
+    :   logicalOrExpression
+    ;
+
 assignmentExpression
-    :   logicalAndExpression
-    |   logicalOrExpression
+    :   conditionalExpression
     |   unaryExpression '=' assignmentExpression
     ;
 
-expression :   assignmentExpression (',' assignmentExpression)* ;
+expression 
+    :   assignmentExpression (',' assignmentExpression)* 
+    ;
 
-parameterTypeList :   parameterList (',' '...')? ;
+parameterTypeList 
+    :   parameterList (',' '...')? 
+    ;
 
-parameterList :   parameterDeclaration (',' parameterDeclaration)* ;
+parameterList 
+    :   parameterDeclaration (',' parameterDeclaration)* 
+    ;
 
-parameterDeclaration :   typeSpecifier declarator ;
+parameterDeclaration 
+    :   typeSpecifier declarator 
+    ;
 
 initializer
     :   assignmentExpression
@@ -152,19 +226,27 @@ initializerList
     ;
 
 
-CONST : 'const';
-POINTER : '*';
+Identifier
+    :   [a-zA-Z_] ([a-zA-Z_] | [0-9])* 
+    ;
 
-Identifier:   [a-zA-Z_]  (   [a-zA-Z_]  |   [0-9])* ;
+Constant
+    :   [1-9] [0-9]*
+    ;
 
-Constant:   [1-9] [0-9]*;
+DigitSequence
+    :   [0-9]+
+    ;
 
-DigitSequence:   [0-9]+;
-
-StringLiteral:   '"' SCharSequence? '"' | '\'' SChar '\'';
+StringLiteral
+    :   '"' SCharSequence? '"' 
+    |   '\'' SChar '\''
+    ;
 
 fragment
-SCharSequence:   SChar+;
+SCharSequence
+    :   SChar+
+    ;
 
 fragment
 SChar
@@ -174,10 +256,23 @@ SChar
     |   '\\\r\n' // Added line
     ;
 
-Whitespace  :   [ \t]+  -> skip;
+Whitespace
+    :   [ \t]+ -> skip
+    ;
 
-Newline  :   (   '\r' '\n'?   |   '\n')  -> skip;
+Newline  
+    :   ('\r' '\n'? | '\n') -> skip
+    ;
 
-BlockComment    :   '/*' .*? '*/'   -> skip;
+BlockComment
+    :   '/*' .*? '*/' -> skip
+    ;
 
-LineComment   :   '//' ~[\r\n]*   -> skip;
+LineComment
+    :   '//' ~[\r\n]* -> skip
+    ;
+
+IncludeDirective
+    :   '#' Whitespace? 'include' Whitespace? (('"' ~[\r\n]* '"') | ('<' ~[\r\n]* '>' )) Whitespace? Newline -> skip
+    ;
+    
