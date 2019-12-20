@@ -118,6 +118,7 @@ class CVisitor(ParseTreeVisitor):
             else:
                 ans += statement
             nextStatement = ctx.children[6].children[0]
+            # elif
             while len(nextStatement.children) > 3:
                 ifExpression = self.visit(nextStatement.expression())
                 statement = self.visit(nextStatement.children[4])
@@ -127,6 +128,7 @@ class CVisitor(ParseTreeVisitor):
                 else:
                     ans += statement
                 nextStatement = nextStatement.children[6].children[0]
+            # else
             statement = self.visit(nextStatement)
             ans += "\n" + self.scope * "    " + "else:\n"
             if statement.strip() == "":
