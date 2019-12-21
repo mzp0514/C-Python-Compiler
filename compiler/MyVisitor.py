@@ -117,22 +117,22 @@ class MyVisitor(CVisitor):
                 ans += (self.scope + 1) * "    " + "pass"
             else:
                 ans += statement
-            nextStatement = ctx.children[6].children[0]
+            nextStatement = ctx.children[6]
             # elif
             flag = 0
-            while len(nextStatement.children) >= 5:
-                ifExpression = self.visit(nextStatement.expression())
-                statement = self.visit(nextStatement.children[4])
+            while nextStatement.selectionStatement():
+                ifExpression = self.visit(nextStatement.selectionStatement().children[2])
+                statement = self.visit(nextStatement.selectionStatement().children[4])
                 ans += "\n" + self.scope * "    " + "elif " + ifExpression + ":\n"
                 if statement.strip() == "":
                     ans += (self.scope + 1) * "    " + "pass"
                 else:
                     ans += statement
-                if len(nextStatement.children) == 5:
+                if len(nextStatement.selectionStatement().children) == 5:
                     flag = 1
                     break
                 else:
-                    nextStatement = nextStatement.children[6].children[0]
+                    nextStatement = nextStatement.selectionStatement().children[6]
             # else
             if flag == 0:
                 statement = self.visit(nextStatement)
