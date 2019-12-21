@@ -141,22 +141,22 @@ class MyVisitor(CVisitor):
                 ans += (self.scope + 1) * "    " + "pass"
             else:
                 ans += statement
-            nextStatement = ctx.children[6].children[0]
+            nextStatement = ctx.children[6]
             # elif
             flag = 0
-            while len(nextStatement.children) >= 5:
-                ifExpression = self.visit(nextStatement.expression())
-                statement = self.visit(nextStatement.children[4])
+            while nextStatement.selectionStatement():
+                ifExpression = self.visit(nextStatement.selectionStatement().children[2])
+                statement = self.visit(nextStatement.selectionStatement().children[4])
                 ans += "\n" + self.scope * "    " + "elif " + ifExpression + ":\n"
                 if statement.strip() == "":
                     ans += (self.scope + 1) * "    " + "pass"
                 else:
                     ans += statement
-                if len(nextStatement.children) == 5:
+                if len(nextStatement.selectionStatement().children) == 5:
                     flag = 1
                     break
                 else:
-                    nextStatement = nextStatement.children[6].children[0]
+                    nextStatement = nextStatement.selectionStatement().children[6]
             # else
             if flag == 0:
                 statement = self.visit(nextStatement)
@@ -182,11 +182,15 @@ class MyVisitor(CVisitor):
 
     # Visit a parse tree produced by CParser#foriteration.
     def visitForiteration(self, ctx:CParser.ForiterationContext):
-        forDeclaration = self.visit(ctx.forDeclaration())[0]
+        forDeclaration = self.visit(ctx.forDeclaration())
         i_name = forDeclaration["name"]
         start = forDeclaration["value"]
         forExpression_0 = self.visit(ctx.forExpression(0))
-        if forExpression_0.find(">") != -1:
+        if forExpression_0.find(">=") != -1:
+            end = str(int(forExpression_0.split(">=")[-1]) - 1)
+        elif forExpression_0.find("<=") != -1:
+            end = str(int(forExpression_0.split("<=")[-1]) + 1)
+        elif forExpression_0.find(">") != -1:
             end = forExpression_0.split(">")[-1]
         elif forExpression_0.find("<") != -1:
             end = forExpression_0.split("<")[-1]
@@ -198,8 +202,8 @@ class MyVisitor(CVisitor):
         elif forExpression_1.find("+") != -1:
             step = forExpression_1.split("+")[-1]
         elif forExpression_1.find("-") != -1:
-            step = "-" + forExpression_1.split("")[-1]
-            
+            step = "-" + forExpression_1.split("-")[-1]
+
         statement = self.visit(ctx.statement())
         ans = "for " + i_name + " in range(" + start + ", " + end + ", " + step + "):\n"
         if statement.strip() == "":
@@ -228,12 +232,12 @@ class MyVisitor(CVisitor):
 
     # Visit a parse tree produced by CParser#forDeclaration.
     def visitForDeclaration(self, ctx:CParser.ForDeclarationContext):
-        return self.visit(ctx.initDeclaratorList())
+        return self.visit(ctx.initDeclarator())
 
 
     # Visit a parse tree produced by CParser#forExpression.
     def visitForExpression(self, ctx:CParser.ForExpressionContext):
-        return self.visit(ctx.assignmentExpression()[0])
+        return self.visit(ctx.assignmentExpression())
 
 
     # Visit a parse tree produced by CParser#blockItem.
@@ -326,13 +330,21 @@ class MyVisitor(CVisitor):
     # Visit a parse tree produced by CParser#unaryExpression.
     def visitUnaryExpression(self, ctx:CParser.UnaryExpressionContext):
         if len(ctx.children) > 1:
-            res = self.visit(ctx.postfixExpression())
-            if ctx.children[0].getText() == "++":
-                return res + " += 1"
-            elif ctx.children[0].getText() == "--":
-                return res + " -= 1"
+            if ctx.postfixExpression():
+                res = self.visit(ctx.postfixExpression())
+                if ctx.children[0].getText() == "++":
+                    return res + " += 1"
+                elif ctx.children[0].getText() == "--":
+                    return res + " -= 1"
+            else:
+                return self.visit(ctx.unaryOperator()) + self.visit(ctx.castExpression())
         else:
             return self.visit(ctx.postfixExpression())
+
+    
+    # Visit a parse tree produced by CParser#unaryOperator.
+    def visitUnaryOperator(self, ctx:CParser.UnaryOperatorContext):
+        return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#castExpression.
