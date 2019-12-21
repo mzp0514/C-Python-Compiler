@@ -35,22 +35,46 @@ class MyVisitor(CVisitor):
 
     # Visit a parse tree produced by CParser#typeSpecifier.
     def visitTypeSpecifier(self, ctx:CParser.TypeSpecifierContext):
-        return ctx.getText()
+        if ctx.structSpecifier():
+            return self.visit(ctx.structSpecifier())
+        else:
+            return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#structSpecifier.
     def visitStructSpecifier(self, ctx:CParser.StructSpecifierContext):
-        return self.visitChildren(ctx)
+        if ctx.structDeclaration():
+            ans = ctx.children[2] + ":\n"
+            for i in ctx.structDeclaration():
+                ans += "    " + self.visit(i) + "\n"
+            return ans
+        else:
+            return ctx.children[2] + ":\n\n"
 
 
     # Visit a parse tree produced by CParser#structDeclaration.
     def visitStructDeclaration(self, ctx:CParser.StructDeclarationContext):
-        return self.visitChildren(ctx)
+        type_ = self.visit(ctx.typeSpecifier())
+        if ctx.structDeclarator():
+            ans = []
+            for i in ctx.structDeclarator():
+                decl = self.visit(i)
+                if type_ == "int":
+                    ans.append([decl, "0"])
+                elif type_ == "char":
+                    ans.append([decl, "\'\0\'"])
+                elif type_[0:6] == "struct":
+                    ans.append([decl, type_[6:] + "()"])
+                else:
+                    ans.append([decl, "None"])
+            names, vals = [e[0] for e in ans], [e[1] for e in ans]
+            return ', '.join(names) + " = " + ', '.join(vals)
+ 
 
 
     # Visit a parse tree produced by CParser#structDeclarator.
     def visitStructDeclarator(self, ctx:CParser.StructDeclaratorContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.declarator())
 
 
     # Visit a parse tree produced by CParser#variableidentifier.
@@ -220,27 +244,35 @@ class MyVisitor(CVisitor):
     # Visit a parse tree produced by CParser#declaration.
     def visitDeclaration(self, ctx:CParser.DeclarationContext):
         type_ = self.visit(ctx.typeSpecifier())
-        decls = self.visit(ctx.initDeclaratorList())
-        ans = []
-        for decl in decls: 
-            if 'length' in decl.keys():
-                if type_ == "int":
-                    ans.append([decl["name"], "[0] * " + decl["length"]])
-                elif type_ == "char":
-                    ans.append([decl["name"], "\'\0\' * " + decl["length"]])
+        if ctx.initDeclaratorList():
+            decls = self.visit(ctx.initDeclaratorList())
+            ans = []
+            for decl in decls: 
+                if 'length' in decl.keys():
+                    if type_ == "int":
+                        ans.append([decl["name"], "[0] * " + decl["length"]])
+                    elif type_ == "char":
+                        ans.append([decl["name"], "\'\0\' * " + decl["length"]])
+                    elif type_[0:6] == "struct":
+                        ans.append([decl["name"], type_[6:] + "() * " + decl["length"]]) 
+                    else:
+                        ans.append([decl["name"], "[None] * " + decl["length"]])
+                elif 'value' in decl.keys():
+                    ans.append([decl["name"], decl["value"]])
                 else:
-                    ans.append([decl["name"], "[None] * " + decl["length"]])
-            elif 'value' in decl.keys():
-                ans.append([decl["name"], decl["value"]])
-            else:
-                if type_ == "int":
-                    ans.append([decl["name"], "0"])
-                elif type_ == "char":
-                    ans.append([decl["name"], "\'\0\'"])
-                else:
-                    ans.append([decl["name"], "None"])
-        names, vals = [e[0] for e in ans], [e[1] for e in ans]
-        return ', '.join(names) + " = " + ', '.join(vals)
+                    if type_ == "int":
+                        ans.append([decl["name"], "0"])
+                    elif type_ == "char":
+                        ans.append([decl["name"], "\'\0\'"])
+                    elif type_[0:6] == "struct":
+                        ans.append([decl["name"], type_[6:] + "()"])
+                    else:
+                        ans.append([decl["name"], "None"])
+            names, vals = [e[0] for e in ans], [e[1] for e in ans]
+            return ', '.join(names) + " = " + ', '.join(vals)
+        else:
+            if type_[0:6] == "struct":
+                return type_
 
 
     # Visit a parse tree produced by CParser#initDeclaratorList.
@@ -283,7 +315,7 @@ class MyVisitor(CVisitor):
             else:
                 return func + "()"
         elif ctx.children[1].getText() == '.':
-            pass
+            return self.visit(ctx.postfixExpression()) + '.' + ctx.children[2].getText()
             # struct
         elif ctx.children[1].getText() == '++':
             return self.visit(ctx.postfixExpression()) + " += 1"
