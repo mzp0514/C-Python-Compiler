@@ -4,7 +4,7 @@ import sys
 from antlr4 import *
 from CLexer import CLexer
 from CParser import CParser
-from CVisitor import CVisitor
+from MyVisitor import MyVisitor
 
 def main(argv):
     input = FileStream(argv[1])
@@ -12,7 +12,7 @@ def main(argv):
     stream = CommonTokenStream(lexer)
     parser = CParser(stream)
     tree = parser.compilationUnit()
-    v = CVisitor()
+    v = MyVisitor()
     v.visit(tree)
 
 if __name__ == '__main__':

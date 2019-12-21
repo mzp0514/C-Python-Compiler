@@ -20,10 +20,9 @@ int max(int a, int b){
 }
 
 void initTree(){
-	int i;
 	avai = 1;
 	root = 0;
-	for(i = 0; i < 10000; i=i+1){
+	for(int i = 0; i < 10000; i=i+1){
 		nodes[i].is_null = 1;
 		nodes[i].height = 0;
 		nodes[i].left = 0;
