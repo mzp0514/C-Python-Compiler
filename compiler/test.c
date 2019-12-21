@@ -1,31 +1,46 @@
-int func(int a, int b){
-    char s[100];
-    char p[] = "sadqaxd";
-    int l[] = {1,2,1,2};
-    gets(s);
-    int len = strlen(a);
-    for(int i = 0; i < strlen(a); ++i){
-        a = 1;
-        a++;
-        b = ++a;
-        printf("a");
-        printf("%d", strlen(a));
-    }
-    for(int i = 100; i > 0; i--){
-        int a[10000], b = 1, c;
-        a[0] = a[1];
-        a[0] = a[2] * a[3];
-        a[7] = a[2] / a[2] + a[0];
-        for(int i = 100; i > 0; i = i + 2){
-        
+#include  <string.h>
+#include  <stdlib.h>
+
+int main() {
+	char S[1024];
+	char T[1024];
+	int nxt[1024];
+	int lenS, lenT;
+	int flag = 0;
+
+	gets(S);
+	gets(T);
+	lenS = strlen(S);
+	lenT = strlen(T);
+
+	nxt[0] = -1;
+    int j = -1;
+	for (int i = 1; i < lenT;  i++) {
+		while(j >= 0 && T[i] != T[j+1]){
+            j = nxt[j];
         }
+		if (T[i] == T[j+1]) {
+            j++;
+        }
+		nxt[i] = j;
+	}
+    j = -1;
+	for (int i = 0; i < lenS; i++) {
+		while(j >= 0 && S[i] != T[j+1]){
+            j = nxt[j];
+        }
+		if (S[i] == T[j+1]) {
+            j++;
+        }
+		if (j == lenT-1) {
+			printf("%d\n", i - j);
+			flag = 1;
+			j = nxt[j];
+		}
+	}
+	if (flag == 0){
+		printf("False\n");
     }
-    for(int i = 100; i > 0; i = i + 2){  
-    }
-    return strlen(b)*2;
-}
-int main(){
-    int a = 0, b = 1;
-    printf("%d", func(a, b*a));
-    return 0;
+
+	return 0;
 }
