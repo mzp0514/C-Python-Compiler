@@ -119,7 +119,8 @@ class CVisitor(ParseTreeVisitor):
                 ans += statement
             nextStatement = ctx.children[6].children[0]
             # elif
-            while len(nextStatement.children) > 3:
+            flag = 0
+            while len(nextStatement.children) >= 5:
                 ifExpression = self.visit(nextStatement.expression())
                 statement = self.visit(nextStatement.children[4])
                 ans += "\n" + self.scope * "    " + "elif " + ifExpression + ":\n"
@@ -127,14 +128,19 @@ class CVisitor(ParseTreeVisitor):
                     ans += (self.scope + 1) * "    " + "pass"
                 else:
                     ans += statement
-                nextStatement = nextStatement.children[6].children[0]
+                if len(nextStatement.children) == 5:
+                    flag = 1
+                    break
+                else:
+                    nextStatement = nextStatement.children[6].children[0]
             # else
-            statement = self.visit(nextStatement)
-            ans += "\n" + self.scope * "    " + "else:\n"
-            if statement.strip() == "":
-                ans += (self.scope + 1) * "    " + "pass"
-            else:
-                ans += statement
+            if flag == 0:
+                statement = self.visit(nextStatement)
+                ans += "\n" + self.scope * "    " + "else:\n"
+                if statement.strip() == "":
+                    ans += (self.scope + 1) * "    " + "pass"
+                else:
+                    ans += statement
         return ans
 
     # Visit a parse tree produced by CParser#whileiteration.
