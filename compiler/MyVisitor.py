@@ -44,12 +44,12 @@ class MyVisitor(CVisitor):
     # Visit a parse tree produced by CParser#structSpecifier.
     def visitStructSpecifier(self, ctx:CParser.StructSpecifierContext):
         if ctx.structDeclaration():
-            ans = ctx.children[2] + ":\n"
+            ans = "class " + ctx.children[1].getText() + ":\n"
             for i in ctx.structDeclaration():
                 ans += "    " + self.visit(i) + "\n"
             return ans
         else:
-            return ctx.children[2] + ":\n\n"
+            return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#structDeclaration.
@@ -59,14 +59,24 @@ class MyVisitor(CVisitor):
             ans = []
             for i in ctx.structDeclarator():
                 decl = self.visit(i)
-                if type_ == "int":
-                    ans.append([decl, "0"])
-                elif type_ == "char":
-                    ans.append([decl, "\'\0\'"])
-                elif type_[0:6] == "struct":
-                    ans.append([decl, type_[6:] + "()"])
+                if 'length' in decl.keys():
+                    if type_ == "int":
+                        ans.append([decl["name"], "[0] * " + decl["length"]])
+                    elif type_ == "char":
+                        ans.append([decl["name"], "\'\0\' * " + decl["length"]])
+                    elif type_[0:6] == "struct":
+                        ans.append([decl["name"], "[" + type_[6:] + "()] * " + decl["length"]])
+                    else:
+                        ans.append([decl["name"], "[None] * " + decl["length"]])
                 else:
-                    ans.append([decl, "None"])
+                    if type_ == "int":
+                        ans.append([decl["name"], "0"])
+                    elif type_ == "char":
+                        ans.append([decl["name"], "\'\0\'"])
+                    elif type_[0:6] == "struct":
+                        ans.append([decl["name"], type_[6:] + "()"])
+                    else:
+                        ans.append([decl["name"], "None"])
             names, vals = [e[0] for e in ans], [e[1] for e in ans]
             return ', '.join(names) + " = " + ', '.join(vals)
  
@@ -258,7 +268,7 @@ class MyVisitor(CVisitor):
                     elif type_ == "char":
                         ans.append([decl["name"], "\'\0\' * " + decl["length"]])
                     elif type_[0:6] == "struct":
-                        ans.append([decl["name"], type_[6:] + "() * " + decl["length"]]) 
+                        ans.append([decl["name"], "[" + type_[6:] + "()] * " + decl["length"]])
                     else:
                         ans.append([decl["name"], "[None] * " + decl["length"]])
                 elif 'value' in decl.keys():
@@ -275,8 +285,7 @@ class MyVisitor(CVisitor):
             names, vals = [e[0] for e in ans], [e[1] for e in ans]
             return ', '.join(names) + " = " + ', '.join(vals)
         else:
-            if type_[0:6] == "struct":
-                return type_
+            return type_
 
 
     # Visit a parse tree produced by CParser#initDeclaratorList.

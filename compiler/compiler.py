@@ -7,7 +7,7 @@ from CParser import CParser
 from MyVisitor import MyVisitor
 
 def main(argv):
-    input = FileStream(argv[1])
+    input = FileStream("test.c")
     lexer = CLexer(input)
     stream = CommonTokenStream(lexer)
     parser = CParser(stream)
