@@ -14,7 +14,7 @@ def main(argv):
     tree = parser.compilationUnit()
     v = MyVisitor()
     f = open("test.py", "w")
-    f.write(v.visit(tree))
+    f.write(v.visit(tree)+"\nmain()")
     f.close()
 
 if __name__ == '__main__':

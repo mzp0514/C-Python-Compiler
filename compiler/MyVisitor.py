@@ -65,7 +65,7 @@ class MyVisitor(CVisitor):
                     elif type_ == "char":
                         ans.append([decl["name"], "\'\0\' * " + decl["length"]])
                     elif type_[0:6] == "struct":
-                        ans.append([decl["name"], "[" + type_[6:] + "()] * " + decl["length"]])
+                        ans.append([decl["name"], "[" + type_[6:] + "() for i in range(" + decl["length"] + ")]"])
                     else:
                         ans.append([decl["name"], "[None] * " + decl["length"]])
                 else:
@@ -268,7 +268,7 @@ class MyVisitor(CVisitor):
                     elif type_ == "char":
                         ans.append([decl["name"], "\'\0\' * " + decl["length"]])
                     elif type_[0:6] == "struct":
-                        ans.append([decl["name"], "[" + type_[6:] + "()] * " + decl["length"]])
+                        ans.append([decl["name"], "[" + type_[6:] + "() for i in range(" + decl["length"] + ")]"])
                     else:
                         ans.append([decl["name"], "[None] * " + decl["length"]])
                 elif 'value' in decl.keys():
