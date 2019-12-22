@@ -2,24 +2,29 @@
 #include <string.h>
 
 int main(){
+	char toDec[] = "1+2";
     char expr[1000];
+	int len_ = strlen(toDec);
+	for (int i = 0; i < len_; i++){
+		expr[i] = toDec[i];
+	}
+
+
     int st_num[1000];
     char st_op[1000];
 
     int st_num_pt = -1;
     int st_op_pt = -1;
 
-    gets(expr);
-    int len = strlen(expr);
-    int i;
-    for(i = len-1; i >= 0; i = i - 1) {
+    len_ = strlen(expr);
+    for(int i = len_-1; i >= 0; i = i - 1) {
         expr[i + 1] = expr[i];
     }
     expr[0] = '(';
-    expr[len+1] = ')';
-    len = len + 2;
+    expr[len_+1] = ')';
+    len_ = len_ + 2;
 
-    i = len - 1;
+    int i = len_ - 1;
     int num = 0;
     int k = 1;
     while(i >= 0){

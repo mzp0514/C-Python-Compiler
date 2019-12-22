@@ -63,7 +63,7 @@ class MyVisitor(CVisitor):
                     if type_ == "int":
                         ans.append([decl["name"], "[0] * " + decl["length"]])
                     elif type_ == "char":
-                        ans.append([decl["name"], "\'\0\' * " + decl["length"]])
+                        ans.append([decl["name"], "[\'\'] * " + decl["length"]])
                     elif type_[0:6] == "struct":
                         ans.append([decl["name"], "[" + type_[6:] + "() for i in range(" + decl["length"] + ")]"])
                     else:
@@ -72,7 +72,7 @@ class MyVisitor(CVisitor):
                     if type_ == "int":
                         ans.append([decl["name"], "0"])
                     elif type_ == "char":
-                        ans.append([decl["name"], "\'\0\'"])
+                        ans.append([decl["name"], "[\'\']"])
                     elif type_[0:6] == "struct":
                         ans.append([decl["name"], type_[6:] + "()"])
                     else:
@@ -266,7 +266,7 @@ class MyVisitor(CVisitor):
                     if type_ == "int":
                         ans.append([decl["name"], "[0] * " + decl["length"]])
                     elif type_ == "char":
-                        ans.append([decl["name"], "\'\0\' * " + decl["length"]])
+                        ans.append([decl["name"], "[\'\'] * " + decl["length"]])
                     elif type_[0:6] == "struct":
                         ans.append([decl["name"], "[" + type_[6:] + "() for i in range(" + decl["length"] + ")]"])
                     else:
@@ -277,7 +277,7 @@ class MyVisitor(CVisitor):
                     if type_ == "int":
                         ans.append([decl["name"], "0"])
                     elif type_ == "char":
-                        ans.append([decl["name"], "\'\0\'"])
+                        ans.append([decl["name"], "[\'\']"])
                     elif type_[0:6] == "struct":
                         ans.append([decl["name"], type_[6:] + "()"])
                     else:
@@ -321,7 +321,7 @@ class MyVisitor(CVisitor):
             if ctx.expression():
                 args = self.visit(ctx.expression())
                 if func == "strlen":
-                    return args[0] + ".length()"
+                    return "len(" + args[0] + ")"
                 elif func == "printf":
                     if len(args) == 1:
                         return "print(" + args[0]  + ")"
@@ -408,7 +408,7 @@ class MyVisitor(CVisitor):
 
     # Visit a parse tree produced by CParser#logicalOrExpression.
     def visitLogicalOrExpression(self, ctx:CParser.LogicalOrExpressionContext):
-        if ctx.logicalAndExpression:
+        if ctx.logicalAndExpression():
             return self.visit(ctx.logicalAndExpression())
         else:
             return self.visit(ctx.logicalOrExpression()) + ' or ' + self.visit(ctx.equalityExpression())
