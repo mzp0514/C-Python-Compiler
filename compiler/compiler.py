@@ -13,7 +13,9 @@ def main(argv):
     parser = CParser(stream)
     tree = parser.compilationUnit()
     v = MyVisitor()
-    v.visit(tree)
+    f = open("test.py", "w")
+    f.write(v.visit(tree))
+    f.close()
 
 if __name__ == '__main__':
     main(sys.argv)
