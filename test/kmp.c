@@ -2,9 +2,12 @@
 #include  <stdlib.h>
 
 int main() {
-	char src[]="abcdeff";
-	char pattern[]="de";
-	int prefix[100];
+	printf("enter two strings, the first is src, and the next is pattern");
+	char src[1000];
+	char pattern[1000];
+	gets(src);
+	gets(pattern);
+	int prefix[1000];
 	int n=strlen(src);
 	int m=strlen(pattern);
 

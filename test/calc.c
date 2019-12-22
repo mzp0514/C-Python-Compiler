@@ -2,7 +2,8 @@
 #include <string.h>
 
 int main(){
-	char toDec[] = "(1+2*3)/2";
+	char toDec[1000];
+    gets(toDec);
     char expr[1000];
 	int len_ = strlen(toDec);
 	for (int i = 0; i < len_; i++){
@@ -91,7 +92,7 @@ int main(){
             num = 0;
             k = 1;
             while(i >= 0 && expr[i] >= '0' && expr[i] <= '9'){
-                num = num + int(expr[i]) - int('0') * k;
+                num = num + (float(expr[i]) - float('0')) * k;
                 k = k * 10;
                 i = i - 1;
             }
