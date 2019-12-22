@@ -8,7 +8,6 @@ def main():
     st_op = [''] * 1000
     st_num_pt = -1
     st_op_pt = -1
-    len_ = len(expr)
     for i in range(len_-1, -1, -1):
         expr[i+1] = expr[i]
     expr[0] = '('
@@ -71,7 +70,7 @@ def main():
             num = 0
             k = 1
             while i >= 0 and expr[i] >= '0' and expr[i] <= '9':
-                num = num+(expr[i]-'0')*k
+                num = num+int(expr[i])-int('0')*k
                 k = k*10
                 i = i-1
             st_num_pt = st_num_pt+1

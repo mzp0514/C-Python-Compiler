@@ -16,7 +16,6 @@ int main(){
     int st_num_pt = -1;
     int st_op_pt = -1;
 
-    len_ = strlen(expr);
     for(int i = len_-1; i >= 0; i = i - 1) {
         expr[i + 1] = expr[i];
     }
@@ -92,7 +91,7 @@ int main(){
             num = 0;
             k = 1;
             while(i >= 0 && expr[i] >= '0' && expr[i] <= '9'){
-                num = num + (expr[i] - '0') * k;
+                num = num + int(expr[i]) - int('0') * k;
                 k = k * 10;
                 i = i - 1;
             }
