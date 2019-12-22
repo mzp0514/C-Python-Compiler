@@ -21,7 +21,6 @@ class MyVisitor(CVisitor):
         for index in range(total):
             ans.append(self.visit(ctx.getChild(index)))
         ans = [ e for e in ans if e is not None]
-        print('\n'.join(ans))
         return '\n'.join(ans)
 
 
@@ -323,6 +322,7 @@ class MyVisitor(CVisitor):
                 if func == "strlen":
                     return "len(" + args[0] + ")"
                 elif func == "printf":
+                    args[0] = args[0][:-1].rstrip('\\n') + "\""
                     if len(args) == 1:
                         return "print(" + args[0]  + ")"
                     elif len(args) == 2:
@@ -349,9 +349,9 @@ class MyVisitor(CVisitor):
             if ctx.postfixExpression():
                 res = self.visit(ctx.postfixExpression())
                 if ctx.children[0].getText() == "++":
-                    return res + " += 1"
+                    return res + " = " + res + " + 1"
                 elif ctx.children[0].getText() == "--":
-                    return res + " -= 1"
+                    return res + " = " + res + " - 1"
             else:
                 return self.visit(ctx.unaryOperator()) + self.visit(ctx.castExpression())
         else:

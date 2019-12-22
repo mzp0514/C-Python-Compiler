@@ -36,12 +36,12 @@ int main(){
                 else {
                     st_num[st_num_pt - 1] = st_num[st_num_pt] / st_num[st_num_pt - 1];
                 }
-                st_num_pt = st_num_pt - 1;
-                st_op_pt = st_op_pt - 1;
+                st_num_pt--;
+                st_op_pt--;
             }
-            st_op_pt = st_op_pt + 1;
+            st_op_pt++;
             st_op[st_op_pt] = '+';
-            i = i - 1;
+            i--;
         }else if(expr[i] == '-'){
             while(st_op_pt >= 0 && ((st_op[st_op_pt] == '*') || (st_op[st_op_pt] == '/'))){
                 if(st_op[st_op_pt] == '*'){
@@ -53,25 +53,25 @@ int main(){
                 st_num_pt = st_num_pt - 1;
                 st_op_pt = st_op_pt - 1;
             }
-            st_op_pt = st_op_pt + 1;
+            st_op_pt++;
             st_op[st_op_pt] = '-';
-            i = i - 1;
+            i--;
         }else if(expr[i] == '*'){
-            st_op_pt = st_op_pt + 1;
+            st_op_pt++;
             st_op[st_op_pt] = '*';
-            i = i - 1;
+            i--;
         }else if(expr[i] == '/'){
-            st_op_pt = st_op_pt + 1;
+            st_op_pt++;
             st_op[st_op_pt] = '/';
-            i = i - 1;
+            i--;
         }else if(expr[i] == ')'){
-            st_op_pt = st_op_pt + 1;
+            st_op_pt++;
             st_op[st_op_pt] = ')';
-            i = i - 1;
+            i--;
         }else if(expr[i] == '('){
             while(st_op[st_op_pt] != ')'){
                 char ch = st_op[st_op_pt];
-                st_op_pt = st_op_pt - 1;
+                st_op_pt--;
                 if(ch == '+'){
                     st_num[st_num_pt - 1] = st_num[st_num_pt] + st_num[st_num_pt - 1];
                 }
@@ -86,17 +86,17 @@ int main(){
                 }
                 st_num_pt = st_num_pt - 1;
             }
-            st_op_pt = st_op_pt - 1;
-            i = i - 1;
+            st_op_pt--;
+            i--;
         }else{
             num = 0;
             k = 1;
             while(i >= 0 && expr[i] >= '0' && expr[i] <= '9'){
                 num = num + (float(expr[i]) - float('0')) * k;
                 k = k * 10;
-                i = i - 1;
+                i--;
             }
-            st_num_pt = st_num_pt + 1;
+            st_num_pt++;
             st_num[st_num_pt] = num;
         }
     }
