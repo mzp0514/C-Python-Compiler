@@ -293,6 +293,16 @@ public interface CListener extends ParseTreeListener {
 	 */
 	void exitUnaryExpression(CParser.UnaryExpressionContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link CParser#unaryOperator}.
+	 * @param ctx the parse tree
+	 */
+	void enterUnaryOperator(CParser.UnaryOperatorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CParser#unaryOperator}.
+	 * @param ctx the parse tree
+	 */
+	void exitUnaryOperator(CParser.UnaryOperatorContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link CParser#castExpression}.
 	 * @param ctx the parse tree
 	 */

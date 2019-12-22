@@ -105,11 +105,11 @@ jumpStatement
     ;
 
 forDeclaration 
-    :   typeSpecifier initDeclaratorList
+    :   typeSpecifier initDeclarator
     ;
 
 forExpression 
-    :   assignmentExpression (',' assignmentExpression)*
+    :   assignmentExpression
     ;
 
 
@@ -120,6 +120,7 @@ blockItem
 
 declaration
     :   typeSpecifier initDeclaratorList ';'
+    |   typeSpecifier ';'
     ;
 
 initDeclaratorList
@@ -135,6 +136,7 @@ primaryExpression
     :   Identifier
     |   Constant
     |   StringLiteral
+    |   '(' expression ')'
     ;
 
 postfixExpression
@@ -150,6 +152,14 @@ unaryExpression
     :   postfixExpression
     |   '++' postfixExpression
     |   '--' postfixExpression
+    |   unaryOperator castExpression
+    ;
+
+unaryOperator
+    :   '+' 
+    |   '-'
+    |   '&'
+    |   '*'
     ;
 
 castExpression

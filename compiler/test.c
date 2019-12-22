@@ -15,7 +15,7 @@ int main(){
     expr[len+1] = ')';
     len = len + 2;
 
-    i = len - 1;
+    int i = len - 1;
     int num = 0;
     int k = 1;
     while(i >= 0){
