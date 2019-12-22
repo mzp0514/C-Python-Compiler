@@ -6,7 +6,7 @@ class AVLNode:
 
 class AVLTree:
     root = 0
-    nodes = [AVLNode()] * 10000
+    nodes = [AVLNode() for i in range(10000)]
     avai = 0
 
 tree = AVLTree()
@@ -177,3 +177,4 @@ def main():
             p = searchNode(elem[i])
             printNode(p)
     return 0
+main()
