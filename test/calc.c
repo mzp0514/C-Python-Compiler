@@ -2,7 +2,7 @@
 #include <string.h>
 
 int main(){
-	char toDec[] = "1+2";
+	char toDec[] = "(1+2*3)/2";
     char expr[1000];
 	int len_ = strlen(toDec);
 	for (int i = 0; i < len_; i++){

@@ -1,99 +1,55 @@
 #include  <string.h>
 #include  <stdlib.h>
 
-int main(){
-    char expr[1000];
-    int st_num[1000];
-    char st_op[1000];
+int main() {
+	char src[]="abcdeff";
+	char pattern[]="de";
+	int prefix[100];
+	int n=strlen(src);
+	int m=strlen(pattern);
 
-    int st_num_pt = -1;
-    int st_op_pt = -1;
-
-	gets(expr);
-    int len = strlen(expr);
-    for(int i = len-1; i >= 0; i = i - 1) {
-        expr[i + 1] = expr[i];
-    }
-    expr[0] = '(';
-    expr[len+1] = ')';
-    len = len + 2;
-
-	i = len - 1;
-    int num = 0;
-    int k = 1;
-    while(i >= 0){
-        if(expr[i] == '+'){
-            while(st_op_pt >= 0 && ((st_op[st_op_pt] == '*') || (st_op[st_op_pt] == '/'))){
-                if(st_op[st_op_pt] == '*') {
-                    st_num[st_num_pt - 1] = st_num[st_num_pt] * st_num[st_num_pt - 1];
-                }
-                else {
-                    st_num[st_num_pt - 1] = st_num[st_num_pt] / st_num[st_num_pt - 1];
-                }
-                st_num_pt = st_num_pt - 1;
-                st_op_pt = st_op_pt - 1;
-            }
-            st_op_pt = st_op_pt + 1;
-            st_op[st_op_pt] = '+';
-            i = i - 1;
-        }else if(expr[i] == '-'){
-            while(st_op_pt >= 0 && ((st_op[st_op_pt] == '*') || (st_op[st_op_pt] == '/'))){
-                if(st_op[st_op_pt] == '*'){
-                    st_num[st_num_pt - 1] = st_num[st_num_pt] * st_num[st_num_pt - 1];
-                }
-                else{
-                    st_num[st_num_pt - 1] = st_num[st_num_pt] / st_num[st_num_pt - 1];
-                }
-                st_num_pt = st_num_pt - 1;
-                st_op_pt = st_op_pt - 1;
-            }
-            st_op_pt = st_op_pt + 1;
-            st_op[st_op_pt] = '-';
-            i = i - 1;
-        }else if(expr[i] == '*'){
-            st_op_pt = st_op_pt + 1;
-            st_op[st_op_pt] = '*';
-            i = i - 1;
-        }else if(expr[i] == '/'){
-            st_op_pt = st_op_pt + 1;
-            st_op[st_op_pt] = '/';
-            i = i - 1;
-        }else if(expr[i] == ')'){
-            st_op_pt = st_op_pt + 1;
-            st_op[st_op_pt] = ')';
-            i = i - 1;
-        }else if(expr[i] == '('){
-            while(st_op[st_op_pt] != ')'){
-                char ch = st_op[st_op_pt];
-                st_op_pt = st_op_pt - 1;
-                if(ch == '+'){
-                    st_num[st_num_pt - 1] = st_num[st_num_pt] + st_num[st_num_pt - 1];
-                }
-                else if(ch == '-'){
-                    st_num[st_num_pt - 1] = st_num[st_num_pt] - st_num[st_num_pt - 1];
-                }
-                else if(ch == '*'){
-                    st_num[st_num_pt - 1] = st_num[st_num_pt] * st_num[st_num_pt - 1];
-                }
-                else if(ch == '/'){
-                    st_num[st_num_pt - 1] = st_num[st_num_pt] / st_num[st_num_pt - 1];
-                }
-                st_num_pt = st_num_pt - 1;
-            }
-            st_op_pt = st_op_pt - 1;
-            i = i - 1;
-        }else{
-            num = 0;
-            k = 1;
-            while(i >= 0 && expr[i] >= '0' && expr[i] <= '9'){
-                num = num + (expr[i] - '0') * k;
-                k = k * 10;
-                i = i - 1;
-            }
-            st_num_pt = st_num_pt + 1;
-            st_num[st_num_pt] = num;
-        }
+	int flag = 0;
+	int k = 0;
+	/* Compute prefix*/
+	for (int q = 2; q < m+1; q=q+1)
+	{
+		while (k > 0 && pattern[k] != pattern[q - 1]) {
+			k = prefix[k - 1];
+		}
+			
+		if (pattern[k] == pattern[q - 1]) {
+			k=k+1;
+		}
+		prefix[q - 1] = k;
 	}
-	printf("%d\n", st_num[0]);
-    return 0;
+	/* Match!*/
+	int q = 0;
+	for (int j = 0; j < n; j=j+1)
+	{
+		while (q > 0 && pattern[q] != src[j]) {
+			q = prefix[q - 1];
+		}
+		if (pattern[q] == src[j]) {
+			q=q+1;
+		}
+			
+		if (q == m)
+		{
+			if (flag == 0) {
+			    int temp1 = j - m +1;
+				printf("%d", temp1);
+			}
+			else {
+			    int temp2 = j - m +1;
+				printf(",%d", temp2);
+			}
+			flag = 1;
+			/* next match */
+			q = prefix[q - 1];
+		}
+	}
+	if (flag == 0) {
+		printf("False");
+	}
+	return 0;
 }
