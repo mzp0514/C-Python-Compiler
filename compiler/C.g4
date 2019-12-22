@@ -60,7 +60,7 @@ STRUCT
     ;
 
 structDeclaration
-    :   (typeSpecifier)* structDeclarator (',' structDeclarator)* ';'
+    :   typeSpecifier structDeclarator (',' structDeclarator)* ';'
     ;
 
 structDeclarator

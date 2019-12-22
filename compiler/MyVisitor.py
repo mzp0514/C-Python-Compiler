@@ -35,22 +35,56 @@ class MyVisitor(CVisitor):
 
     # Visit a parse tree produced by CParser#typeSpecifier.
     def visitTypeSpecifier(self, ctx:CParser.TypeSpecifierContext):
-        return ctx.getText()
+        if ctx.structSpecifier():
+            return self.visit(ctx.structSpecifier())
+        else:
+            return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#structSpecifier.
     def visitStructSpecifier(self, ctx:CParser.StructSpecifierContext):
-        return self.visitChildren(ctx)
+        if ctx.structDeclaration():
+            ans = "class " + ctx.children[1].getText() + ":\n"
+            for i in ctx.structDeclaration():
+                ans += "    " + self.visit(i) + "\n"
+            return ans
+        else:
+            return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#structDeclaration.
     def visitStructDeclaration(self, ctx:CParser.StructDeclarationContext):
-        return self.visitChildren(ctx)
+        type_ = self.visit(ctx.typeSpecifier())
+        if ctx.structDeclarator():
+            ans = []
+            for i in ctx.structDeclarator():
+                decl = self.visit(i)
+                if 'length' in decl.keys():
+                    if type_ == "int":
+                        ans.append([decl["name"], "[0] * " + decl["length"]])
+                    elif type_ == "char":
+                        ans.append([decl["name"], "\'\0\' * " + decl["length"]])
+                    elif type_[0:6] == "struct":
+                        ans.append([decl["name"], "[" + type_[6:] + "()] * " + decl["length"]])
+                    else:
+                        ans.append([decl["name"], "[None] * " + decl["length"]])
+                else:
+                    if type_ == "int":
+                        ans.append([decl["name"], "0"])
+                    elif type_ == "char":
+                        ans.append([decl["name"], "\'\0\'"])
+                    elif type_[0:6] == "struct":
+                        ans.append([decl["name"], type_[6:] + "()"])
+                    else:
+                        ans.append([decl["name"], "None"])
+            names, vals = [e[0] for e in ans], [e[1] for e in ans]
+            return ', '.join(names) + " = " + ', '.join(vals)
+ 
 
 
     # Visit a parse tree produced by CParser#structDeclarator.
     def visitStructDeclarator(self, ctx:CParser.StructDeclaratorContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.declarator())
 
 
     # Visit a parse tree produced by CParser#variableidentifier.
@@ -93,14 +127,14 @@ class MyVisitor(CVisitor):
 
     # Visit a parse tree produced by CParser#expressionStatement.
     def visitExpressionStatement(self, ctx:CParser.ExpressionStatementContext):
-        return self.visit(ctx.expression())
+        return ", ".join(self.visit(ctx.expression()))
 
 
     # Visit a parse tree produced by CParser#selectionStatement.
     def visitSelectionStatement(self, ctx:CParser.SelectionStatementContext):
         # 纯if语句
         if len(ctx.children) <= 5:
-            ifExpression = self.visit(ctx.expression())
+            ifExpression = self.visit(ctx.expression())[0]
             statement = self.visit(ctx.children[4])
             ans = "if " + ifExpression + ":\n"
             if statement.strip() == "":
@@ -110,7 +144,7 @@ class MyVisitor(CVisitor):
         # if-elif-else语句
         else:
             # 先解析最开始的if
-            ifExpression = self.visit(ctx.expression())
+            ifExpression = self.visit(ctx.expression())[0]
             statement = self.visit(ctx.children[4])
             ans = "if " + ifExpression + ":\n"
             if statement.strip() == "":
@@ -121,7 +155,7 @@ class MyVisitor(CVisitor):
             # elif
             flag = 0
             while nextStatement.selectionStatement():
-                ifExpression = self.visit(nextStatement.selectionStatement().children[2])
+                ifExpression = self.visit(nextStatement.selectionStatement().children[2])[0]
                 statement = self.visit(nextStatement.selectionStatement().children[4])
                 ans += "\n" + self.scope * "    " + "elif " + ifExpression + ":\n"
                 if statement.strip() == "":
@@ -146,7 +180,7 @@ class MyVisitor(CVisitor):
     # Visit a parse tree produced by CParser#whileiteration.
     def visitWhileiteration(self, ctx:CParser.WhileiterationContext):
         
-        whileExpression = self.visit(ctx.expression())
+        whileExpression = self.visit(ctx.expression())[0]
         statement = self.visit(ctx.statement())
         ans = "while " + whileExpression + ":\n"
         if statement.strip() == "":
@@ -202,7 +236,7 @@ class MyVisitor(CVisitor):
     # Visit a parse tree produced by CParser#returnjump.
     def visitReturnjump(self, ctx:CParser.ReturnjumpContext):
         if ctx.expression():
-            return "return " + self.visit(ctx.expression())
+            return "return " + ", ".join(self.visit(ctx.expression()))
         return "return"
 
 
@@ -224,27 +258,34 @@ class MyVisitor(CVisitor):
     # Visit a parse tree produced by CParser#declaration.
     def visitDeclaration(self, ctx:CParser.DeclarationContext):
         type_ = self.visit(ctx.typeSpecifier())
-        decls = self.visit(ctx.initDeclaratorList())
-        ans = []
-        for decl in decls: 
-            if 'length' in decl.keys():
-                if type_ == "int":
-                    ans.append([decl["name"], "[0] * " + decl["length"]])
-                elif type_ == "char":
-                    ans.append([decl["name"], "\'\0\' * " + decl["length"]])
+        if ctx.initDeclaratorList():
+            decls = self.visit(ctx.initDeclaratorList())
+            ans = []
+            for decl in decls: 
+                if 'length' in decl.keys():
+                    if type_ == "int":
+                        ans.append([decl["name"], "[0] * " + decl["length"]])
+                    elif type_ == "char":
+                        ans.append([decl["name"], "\'\0\' * " + decl["length"]])
+                    elif type_[0:6] == "struct":
+                        ans.append([decl["name"], "[" + type_[6:] + "()] * " + decl["length"]])
+                    else:
+                        ans.append([decl["name"], "[None] * " + decl["length"]])
+                elif 'value' in decl.keys():
+                    ans.append([decl["name"], decl["value"]])
                 else:
-                    ans.append([decl["name"], "[None] * " + decl["length"]])
-            elif 'value' in decl.keys():
-                ans.append([decl["name"], decl["value"]])
-            else:
-                if type_ == "int":
-                    ans.append([decl["name"], "0"])
-                elif type_ == "char":
-                    ans.append([decl["name"], "\'\0\'"])
-                else:
-                    ans.append([decl["name"], "None"])
-        names, vals = [e[0] for e in ans], [e[1] for e in ans]
-        return ', '.join(names) + " = " + ', '.join(vals)
+                    if type_ == "int":
+                        ans.append([decl["name"], "0"])
+                    elif type_ == "char":
+                        ans.append([decl["name"], "\'\0\'"])
+                    elif type_[0:6] == "struct":
+                        ans.append([decl["name"], type_[6:] + "()"])
+                    else:
+                        ans.append([decl["name"], "None"])
+            names, vals = [e[0] for e in ans], [e[1] for e in ans]
+            return ', '.join(names) + " = " + ', '.join(vals)
+        else:
+            return type_
 
 
     # Visit a parse tree produced by CParser#initDeclaratorList.
@@ -264,6 +305,8 @@ class MyVisitor(CVisitor):
 
     # Visit a parse tree produced by CParser#primaryExpression.
     def visitPrimaryExpression(self, ctx:CParser.PrimaryExpressionContext):
+        if ctx.expression():
+            return "(" + self.visit(ctx.expression())[0] + ")"
         return ctx.getText()
 
 
@@ -272,22 +315,27 @@ class MyVisitor(CVisitor):
         if ctx.primaryExpression():
             return self.visit(ctx.primaryExpression())
         if ctx.children[1].getText() == '[':
-            return self.visit(ctx.postfixExpression()) + '[' + self.visit(ctx.expression()) + ']'
+            return self.visit(ctx.postfixExpression()) + '[' + ", ".join(self.visit(ctx.expression())) + ']'
         elif ctx.children[1].getText() == '(':
             func = ctx.postfixExpression().getText()
             if ctx.expression():
                 args = self.visit(ctx.expression())
                 if func == "strlen":
-                    return args + ".length()"
+                    return args[0] + ".length()"
                 elif func == "printf":
-                    return "print(" + args + ")"
+                    if len(args) == 1:
+                        return "print(" + args[0]  + ")"
+                    elif len(args) == 2:
+                        return "print(%s %% %s)" % (args[0], args[1])
+                    else:
+                        return "print(%s %% (%s))" % (args[0], ", ".join(args[1:]))
                 elif func == "gets":
-                    return args + " = input()"
-                return func + "(" + args + ")"
+                    return args[0] + " = input()"
+                return func + "(" + ", ".join(args) + ")"
             else:
                 return func + "()"
         elif ctx.children[1].getText() == '.':
-            pass
+            return self.visit(ctx.postfixExpression()) + '.' + ctx.children[2].getText()
             # struct
         elif ctx.children[1].getText() == '++':
             return self.visit(ctx.postfixExpression()) + " += 1"
@@ -382,8 +430,7 @@ class MyVisitor(CVisitor):
 
     # Visit a parse tree produced by CParser#expression.
     def visitExpression(self, ctx:CParser.ExpressionContext):
-        ans = [self.visit(x) for x in ctx.assignmentExpression()]
-        return ', '.join([self.visit(x) for x in ctx.assignmentExpression()])
+        return [self.visit(x) for x in ctx.assignmentExpression()]
 
 
     # Visit a parse tree produced by CParser#parameterTypeList.
