@@ -305,7 +305,10 @@ class MyVisitor(CVisitor):
 
     # Visit a parse tree produced by CParser#primaryExpression.
     def visitPrimaryExpression(self, ctx:CParser.PrimaryExpressionContext):
-        return ctx.getText()
+        if ctx.expression():
+            return self.visit(ctx.expression())
+        else:
+            return ctx.getText()
 
 
     # Visit a parse tree produced by CParser#postfixExpression.
