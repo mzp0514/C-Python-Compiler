@@ -197,9 +197,9 @@ class MyVisitor(CVisitor):
         start = forDeclaration["value"]
         forExpression_0 = self.visit(ctx.forExpression(0))
         if forExpression_0.find(">=") != -1:
-            end = str(int(forExpression_0.split(">=")[-1]) - 1)
+            end = forExpression_0.split(">=")[-1] + " - 1"
         elif forExpression_0.find("<=") != -1:
-            end = str(int(forExpression_0.split("<=")[-1]) + 1)
+            end = forExpression_0.split("<=")[-1] + " + 1"
         elif forExpression_0.find(">") != -1:
             end = forExpression_0.split(">")[-1]
         elif forExpression_0.find("<") != -1:
@@ -266,7 +266,7 @@ class MyVisitor(CVisitor):
                     if type_ == "int":
                         ans.append([decl["name"], "[0] * " + decl["length"]])
                     elif type_ == "char":
-                        ans.append([decl["name"], "[\'\'] * " + decl["length"]])
+                        ans.append([decl["name"], "[\'\'] * " + decl["length"]])                      
                     elif type_[0:6] == "struct":
                         ans.append([decl["name"], "[" + type_[6:] + "() for i in range(" + decl["length"] + ")]"])
                     else:
